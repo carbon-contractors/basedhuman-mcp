@@ -1,0 +1,14 @@
+{
+  "name": "basedhuman-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for Carbon Contractors — HaaS platform enabling AI agents to hire and pay humans via USDC on Base",
+  "main": "index.js",
+  "keywords": ["mcp", "ai-agents", "usdc", "base", "haas", "x402"],
+  "author": "Aaron Clifft",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/carbon-contractors/basedhuman-mcp"
+  },
+  "homepage": "https://carbon-contractors.com"
+}
