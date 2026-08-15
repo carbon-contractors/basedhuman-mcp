@@ -12,7 +12,7 @@ Add to your Claude config:
   "mcpServers": {
     "carbon-contractors": {
       "type": "streamable-http",
-      "url": "https://carbon-contractors.com/api/basedhuman.mcp"
+      "url": "https://www.carbon-contractors.com/api/basedhuman.mcp"
     }
   }
 }
