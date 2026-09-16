@@ -62,7 +62,11 @@ function isRequest(msg: JSONRPCMessage): msg is JSONRPCMessage & { id: string | 
 }
 
 function isInternalReinitResponse(msg: JSONRPCMessage): boolean {
-  return "result" in msg && "id" in msg && msg.id === REINIT_ID;
+  // Match on id alone, not shape: a remote that answers the internal
+  // initialize with a JSON-RPC error body (HTTP 200 + error, or any
+  // error-shaped reply) must still be swallowed — forwarding it would emit a
+  // response for an id the host never sent.
+  return "id" in msg && msg.id === REINIT_ID;
 }
 
 function jsonRpcError(id: string | number | null, message: string): JSONRPCMessage {

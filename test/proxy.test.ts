@@ -301,4 +301,77 @@ describe("runProxy", () => {
     await stdio.close();
     await run;
   });
+
+  it("swallows an error-shaped reply to the internal re-init initialize", async () => {
+    // Remote that answers the internal initialize (id __basedhuman_bridge_reinit__)
+    // with a JSON-RPC error body over HTTP 200 — the leak class the swallow exists
+    // to prevent. The host must never see a response for an id it never sent.
+    const remote = makeFakeRemote();
+    const stdio = new FakeStdio();
+
+    // Wrap the fake remote so the INTERNAL initialize gets an error body (200).
+    const remoteFetch = remote.fetchFn as (u: unknown, i?: RequestInit) => Promise<Response>;
+    const fetchFn = (async (url: unknown, init?: RequestInit) => {
+      if (init?.method === "POST") {
+        const body = JSON.parse(String(init.body)) as { method?: string; id?: string | number };
+        if (body.method === "initialize" && body.id === "__basedhuman_bridge_reinit__") {
+          // Still create the session (send() needs the mcp-session-id header to
+          // resolve), but answer the initialize itself with an error body. The
+          // session header still rides on the error response — a remote can
+          // create the session and then reject at the protocol level.
+          const before = new Set(remote.sessions);
+          await remoteFetch(url, init);
+          const newSid = [...remote.sessions].find((s) => !before.has(s));
+          return new Response(
+            JSON.stringify({
+              jsonrpc: "2.0",
+              id: "__basedhuman_bridge_reinit__",
+              error: { code: -32000, message: "internal re-init rejected (test)" },
+            }),
+            {
+              status: 200,
+              headers: {
+                "content-type": "application/json",
+                ...(newSid ? { "mcp-session-id": newSid } : {}),
+              },
+            },
+          );
+        }
+      }
+      return remoteFetch(url, init);
+    }) as typeof fetch;
+
+    const run = runProxy(ENDPOINT, {
+      fetchFn,
+      authHeadersProvider: async () => null,
+      stdio,
+    });
+    await wait(20);
+
+    // Host initialize → session-1 (answered normally by the fake remote).
+    stdio.hostSends({ jsonrpc: "2.0", id: 1, method: "initialize", params: {} } as JSONRPCMessage);
+    await wait(20);
+    expect(stdio.sent).toHaveLength(1);
+
+    // Kill the session; host request → 404 → re-auth → internal initialize →
+    // error body (200). The error reply must be swallowed; the host's own
+    // request (id 2) must still be answered.
+    remote.sessions.clear();
+    stdio.hostSends({ jsonrpc: "2.0", id: 2, method: "tools/list" } as JSONRPCMessage);
+    await wait(50);
+
+    const reply = stdio.sent.find((m) => (m as { id?: unknown }).id === 2);
+    expect(reply).toBeDefined();
+    // The core assertion: no message with the internal id EVER reaches the host.
+    expect(
+      stdio.sent.some(
+        (m) => (m as { id?: unknown }).id === "__basedhuman_bridge_reinit__",
+      ),
+    ).toBe(false);
+    // And no error body for id 2 either — the replay succeeded on the new session.
+    expect((reply as { error?: { message?: string } })?.error?.message).toBeUndefined();
+
+    await stdio.close();
+    await run;
+  });
 });
