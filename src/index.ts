@@ -1,8 +1,14 @@
+#!/usr/bin/env node
 /**
  * index.ts — basedhuman-mcp entrypoint.
  *
  * STDIO bridge to the Carbon Contractors Base-Human marketplace MCP endpoint.
  * See README.md for configuration.
+ *
+ * The shebang on line 1 is load-bearing: package.json "bin" points here, and
+ * npm symlinks .bin/basedhuman-mcp directly at dist/index.js. tsc preserves a
+ * leading #! from source to emit, so this line is what makes the installed
+ * CLI executable. scripts/bin-check.mjs asserts it survives the build.
  */
 
 import { privateKeyToAccount } from "viem/accounts";
