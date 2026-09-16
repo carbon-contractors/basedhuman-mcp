@@ -1,14 +1,56 @@
 {
   "name": "basedhuman-mcp",
-  "version": "0.1.0",
-  "description": "MCP server for Carbon Contractors — HaaS platform enabling AI agents to hire and pay humans via USDC on Base",
-  "main": "index.js",
-  "keywords": ["mcp", "ai-agents", "usdc", "base", "haas", "x402"],
-  "author": "Aaron Clifft",
+  "version": "0.2.0",
+  "description": "STDIO MCP bridge to the Carbon Contractors Base-Human marketplace — AI agents hire and pay humans via USDC on Base",
+  "type": "module",
   "license": "MIT",
+  "author": "Aaron Clifft",
+  "homepage": "https://carbon-contractors.com",
   "repository": {
     "type": "git",
-    "url": "https://github.com/carbon-contractors/basedhuman-mcp"
+    "url": "git+https://github.com/carbon-contractors/basedhuman-mcp.git"
   },
-  "homepage": "https://carbon-contractors.com"
+  "keywords": [
+    "mcp",
+    "mcp-server",
+    "ai-agents",
+    "usdc",
+    "base",
+    "haas",
+    "x402",
+    "carbon-contractors"
+  ],
+  "bin": {
+    "basedhuman-mcp": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=18.17"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint src test",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "bin-check": "node scripts/bin-check.mjs"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.27.1",
+    "viem": "^2.47.4",
+    "zod": "^4.3.6"
+  },
+  "devDependencies": {
+    "@types/node": "^24.0.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.6.0",
+    "typescript-eslint": "^8.69.0",
+    "vitest": "^3.2.4"
+  }
 }
