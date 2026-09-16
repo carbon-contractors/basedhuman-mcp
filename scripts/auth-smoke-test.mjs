@@ -65,13 +65,19 @@ child.stdin.write(
 );
 
 let init = null;
-for (let i = 0; i < 60 && !init; i++) {
+// 30s window (was 6s): the challenge endpoint has measured 2.7s under load and
+// one review run saw it exceed the old window entirely.
+for (let i = 0; i < 300 && !init; i++) {
   await sleep(100);
   init = responses.find((r) => r.id === 1);
 }
 
 if (!init) {
-  console.error("✗ no initialize response (bridge may have failed auth or network)");
+  console.error(
+    `✗ no initialize response after 30s — bridge alive: ${!child.killed}, ` +
+      `responses received: ${responses.length} ` +
+      `(bridge stderr, if any, was inherited above; run with BASEDHUMAN_LOG=debug for detail)`,
+  );
   child.kill();
   process.exit(1);
 }
